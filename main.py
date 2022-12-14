@@ -6,7 +6,7 @@ import math
 import sys
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QMainWindow
-from motplotlib import Ui_MainWindow
+from Design import Ui_MainWindow
 
 
 def Rot(x, y, a):
