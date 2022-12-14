@@ -29,33 +29,36 @@ def odefun(s: np.ndarray, _):
 class Earth_drawing:
     def __init__(self, quality=1):
         self.poligons = 100 * quality
-        self.R = 6371
-        self.R_atm = 6489
+        self.r = 6371
+        self.atm = 6489
         self.mass = 5 * (10 ** 16)
         self.g = 9.8
+        self.h_atm = self.r + 400
 
     def draw(self):
         u = np.linspace(-np.pi, np.pi, self.poligons)
         v = np.linspace(0, np.pi, self.poligons)
 
-        x = self.R * np.outer(np.cos(u), np.sin(v))
-        y = self.R * np.outer(np.sin(u), np.sin(v))
-        z = self.R * np.outer(np.ones(np.size(u)), np.cos(v))
+        x = self.r * np.outer(np.cos(u), np.sin(v))
+        y = self.r * np.outer(np.sin(u), np.sin(v))
+        z = self.r * np.outer(np.ones(np.size(u)), np.cos(v))
+
+        u, v = np.mgrid[0:2 * np.pi:20j, 0:np.pi:10j]
+        x1 = np.cos(u) * np.sin(v) * self.h_atm
+        y1 = np.sin(u) * np.sin(v) * self.h_atm
+        z1 = np.cos(v) * self.h_atm
+        ax.plot_wireframe(x1, y1, z1, color="b", alpha=0.3)
 
         im = PIL.Image.open('earthmap.jpg')
         im = np.array(im.resize([self.poligons, self.poligons])) / 255
 
         ax.plot_surface(x, y, z, rstride=4, cstride=4, facecolors=im, antialiased=True, shade=False)
-        ax.scatter(15000, 15000, 15000, alpha=0)
-        ax.scatter(-15000, 15000, 15000, alpha=0)
-        ax.scatter(15000, -15000, 15000, alpha=0)
-        ax.scatter(15000, 15000, -15000, alpha=0)
 
 
 class Satellite_trajectory:
     def __init__(self, lat, lon):
         self.height = 1300
-        x = self.height + Earth_drawing().R
+        x = self.height + Earth_drawing().r
         y = 0
         z = 0
         self.lat = lat
@@ -72,15 +75,29 @@ class Satellite_trajectory:
     def create_trajectory(self):
         x, z = Rot(self.x, self.z, 180 - self.lat)
         x, y = Rot(x, self.y, 180 - self.lon)
-        ts = np.linspace(0, 5000, 1000)
+        tspan = np.linspace(0, 5000, 1000)
         state0 = np.array([x, y, z, self.vec_x, self.vec_y, self.vec_z])
 
-        sol = odeint(odefun, state0, ts)
-        coord = min(sol, key=lambda xc: math.sqrt((xc[0] - self.x) ** 2 + (xc[1] - self.y) ** 2 +
-                                                  (xc[2] - self.z) ** 2))
+        solution = odeint(odefun, state0, tspan)
+        coord = min(solution, key=lambda xc: math.sqrt((xc[0] - self.x) ** 2 + (xc[1] - self.y) ** 2 +
+                                                       (xc[2] - self.z) ** 2))
 
-        ax.scatter(coord[0], coord[1], coord[2], color="black")
-        ax.plot(sol[:, 0], sol[:, 1], sol[:, 2], 'g', label='Trajectory', linewidth=2.0)
+        ISS_height = min(solution, key=lambda xw: math.sqrt((xw[0]) ** 2 + (xw[1]) ** 2 + (xw[2]) ** 2))
+        ISS_height = math.sqrt((ISS_height[0]) ** 2 + (ISS_height[1]) ** 2 + (ISS_height[2]) ** 2)
+
+        if ISS_height > 6371 + 400:
+            print('Спутник не входит в атмосферу земли')
+        else:
+            print('Спутник входит в атмосферу земли')
+
+        if ISS_height > 6371:
+            print('Спутник не падает')
+        else:
+            print('Спутник падает')
+
+
+        ax.scatter(coord[0], coord[1], coord[2], color="black", label="Satellite")
+        ax.plot(solution[:, 0], solution[:, 1], solution[:, 2], 'gray', label='Trajectory', linewidth=2.0)
         z = np.linspace(-1 * coord[2] - 2000, coord[2] + 2000)
         x = 0 * z
         y = 0 * z
@@ -92,16 +109,16 @@ class Satellite_trajectory:
         potential = []
         tot = []
 
-        for i in sol:
+        for i in solution:
             v = math.sqrt(i[3] ** 2 + i[4] ** 2 + i[5] ** 2)
             h = math.sqrt(i[0] ** 2 + i[1] ** 2 + i[2] ** 2)
             kinetic.append(0.5 * satellite.mass * v ** 2)
             potential.append(-1 * G * 5 * (10 ** 16) * satellite.mass / h)
             tot.append(kinetic[-1] + potential[-1])
 
-        ax2.plot(ts, potential, 'b', label="potential")
-        ax2.plot(ts, tot, 'k', label='total')
-        ax2.plot(ts, kinetic, 'r', label="kinetic")
+        ax2.plot(tspan, potential, 'b', label="potential")
+        ax2.plot(tspan, tot, 'k', label='total')
+        ax2.plot(tspan, kinetic, 'r', label="kinetic")
         ax2.legend()
 
 
