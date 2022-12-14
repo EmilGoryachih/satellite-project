@@ -37,14 +37,11 @@ class Earth_drawing:
     def draw(self):
         u = np.linspace(-np.pi, np.pi, self.poligons)
         v = np.linspace(0, np.pi, self.poligons)
-
         x = self.R * np.outer(np.cos(u), np.sin(v))
         y = self.R * np.outer(np.sin(u), np.sin(v))
         z = self.R * np.outer(np.ones(np.size(u)), np.cos(v))
-
         im = PIL.Image.open('earth.png')
         im = np.array(im.resize([self.poligons, self.poligons])) / 255
-
         ax.plot_surface(x, y, z, rstride=4, cstride=4, facecolors=im, antialiased=True, shade=False)
         ax.scatter(15000, 15000, 15000, alpha=0)
         ax.scatter(-15000, 15000, 15000, alpha=0)
@@ -74,23 +71,18 @@ class Satellite_trajectory:
         x, y = Rot(x, self.y, 180 - self.lon)
         ts = np.linspace(0, 5000, 1000)
         state0 = np.array([x, y, z, self.vec_x, self.vec_y, self.vec_z])
-
         sol = odeint(odefun, state0, ts)
         coord = min(sol, key=lambda xc: math.sqrt((xc[0] - self.x) ** 2 + (xc[1] - self.y) ** 2 +
                                                   (xc[2] - self.z) ** 2))
-
         ax.scatter(coord[0], coord[1], coord[2], color="black")
         ax.plot(sol[:, 0], sol[:, 1], sol[:, 2], 'g', label='Trajectory', linewidth=2.0)
         z = np.linspace(-1 * coord[2] - 2000, coord[2] + 2000)
         x = 0 * z
         y = 0 * z
-
         ax.plot(x, y, z, 'r', linewidth=2, label="Earth axis")
         ax.legend()
-
         kinetic_energy = []
         potential_energy = []
-
         for i in sol:
             v = math.sqrt(i[3] ** 2 + i[4] ** 2 + i[5] ** 2)
             h = math.sqrt(i[0] ** 2 + i[1] ** 2 + i[2] ** 2)
@@ -108,7 +100,7 @@ class MainWindow:
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self.main_win)
         self.ui.pushButton.clicked.connect(self.Start)
-
+        
     def show(self):
         self.main_win.show()
 
@@ -128,12 +120,9 @@ ax.set_box_aspect((1, 1, 1))
 ax.margins(8000, 8000, 8000)
 ax.legend()
 ax.autoscale(enable=False, tight=True)
-
 ax2.autoscale(enable=True, tight=False)
-
 G = 6.6743015 * (10 ** (-11))
 LAT, LON = 90, 90
-
 satellite = Satellite_trajectory(LAT, LON)
 satellite.create_trajectory()
 
