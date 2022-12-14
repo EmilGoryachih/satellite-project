@@ -42,7 +42,7 @@ class Earth_drawing:
         y = self.R * np.outer(np.sin(u), np.sin(v))
         z = self.R * np.outer(np.ones(np.size(u)), np.cos(v))
 
-        im = PIL.Image.open('min_earth.png')
+        im = PIL.Image.open('earth.png')
         im = np.array(im.resize([self.poligons, self.poligons])) / 255
 
         ax.plot_surface(x, y, z, rstride=4, cstride=4, facecolors=im, antialiased=True, shade=False)
