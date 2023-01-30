@@ -8,6 +8,9 @@
 
 • Откроется окно, в котором вы сможете выбрать уровень графики(на высоких настройках возможны лаги)
 
+![image](https://user-images.githubusercontent.com/83202732/215562849-73215469-44c0-423f-a7f9-5fd97d504908.png)
+
+
 • После нужно нажать на кнопку Start
 
 ![image](https://user-images.githubusercontent.com/83202732/215562447-34de1ef3-0caf-4c73-a830-849cc8d85146.png)
